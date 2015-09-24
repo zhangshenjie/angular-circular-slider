@@ -495,6 +495,18 @@ Copyright (c) 2015 Prince John Wesley (princejohnwesley@gmail.com)
     var onAnimate = false;
     var lastTouchType = '';
 
+    var calcEventCursor = function(e) {
+      var cursor = {
+        x: e.offsetX || e.layerX,
+        y: e.offsetY || e.layerY
+      };
+      if (e.target.className == 'acs') {
+        cursor.x += cs.acsCenter.x - cs.acsCenter.r;
+        cursor.y += cs.acsCenter.y - cs.acsCenter.r;
+      }
+      return cursor;
+    };
+
     var touchHandler = function(e) {
       var touches = e.changedTouches;
 
@@ -539,10 +551,7 @@ Copyright (c) 2015 Prince John Wesley (princejohnwesley@gmail.com)
     };
 
     var translate = function(e) {
-      var cursor = {
-        x: e.offsetX || e.layerX,
-        y: e.offsetY || e.layerY
-      };
+      var cursor = calcEventCursor(e);
 
       var dx = cursor.x - cs.acsCenter.x;
       var dy = cursor.y - cs.acsCenter.y;
@@ -612,10 +621,7 @@ Copyright (c) 2015 Prince John Wesley (princejohnwesley@gmail.com)
 
       if (!mouseDown || onAnimate) return;
 
-      var cursor = {
-        x: e.offsetX || e.layerX,
-        y: e.offsetY || e.layerY
-      };
+      var cursor = calcEventCursor(e);
 
       var dx = cursor.x - cs.acsCenter.x;
       var dy = cursor.y - cs.acsCenter.y;
@@ -663,17 +669,16 @@ Copyright (c) 2015 Prince John Wesley (princejohnwesley@gmail.com)
       if(cs.components.scope.disabled)
         return;
       e.stopPropagation();
-      var cursor = {
-        x: e.offsetX || e.layerX,
-        y: e.offsetY || e.layerY
-      };
+      var cursor = calcEventCursor(e);
 
       var dx = cursor.x - cs.acsCenter.x;
       var dy = cursor.y - cs.acsCenter.y;
       var scope = cs.components.scope;
 
       var distance = Math.sqrt(dx * dx + dy * dy);
-      if (cs.acsRadius - distance <= cs.acsRadius * 0.1 || distance > cs.acsRadius) {
+      var rate = (Math.max(cs.acsCenter.x, cs.acsCenter.y) - cs.acsRadius) / cs.acsRadius;
+      if (distance <= cs.acsRadius * Math.max(1 + rate, 1.1) &&
+          distance >= cs.acsRadius * Math.min(1 - rate, 0.9)) {
         if (scope.animate) {
           translate(e);
         } else {
@@ -831,7 +836,7 @@ Copyright (c) 2015 Prince John Wesley (princejohnwesley@gmail.com)
       };
 
     function buildComponents() {
-		var acsPanel = element.children();
+        var acsPanel = element.children();
         var acsPanelChildren = acsPanel.children();
         var acs = angular.element(acsPanelChildren[0]);
         var acsIndicator = angular.element(acsPanelChildren[1]);
